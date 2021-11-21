@@ -1,42 +1,75 @@
-import React from 'react';
+// This is a Search page
+
+import React, { useState } from 'react';
 import {
   ChakraProvider,
   Box,
-  Text,
-  Link,
-  VStack,
-  Code,
-  Grid,
+  Flex,
   theme,
+  Input,
+  Button,
+  SimpleGrid
 } from '@chakra-ui/react';
-import { ColorModeSwitcher } from './ColorModeSwitcher';
-import { Logo } from './Logo';
+import {useGithubUser} from './hooks/useGithubUser';
+import { Profile } from './components/Profile';
+import { Repo } from './components/Repo';
 
 function App() {
+  const [valid, setValid] = useState(true);
+  const [username, setUsername] = useState();
+  const { user, repos, getUser} = useGithubUser();
   return (
     <ChakraProvider theme={theme}>
-      <Box textAlign="center" fontSize="xl">
-        <Grid minH="100vh" p={3}>
-          <ColorModeSwitcher justifySelf="flex-end" />
-          <VStack spacing={8}>
-            <Logo h="40vmin" pointerEvents="none" />
-            <Text>
-              Edit <Code fontSize="xl">src/App.js</Code> and save to reload.
-            </Text>
-            <Link
-              color="teal.500"
-              href="https://chakra-ui.com"
-              fontSize="2xl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn Chakra
-            </Link>
-          </VStack>
-        </Grid>
-      </Box>
+      <Flex direction="column" minHeight="100vh">
+        <Box as="header">
+          <Flex 
+            as="form" 
+            paddingY={4} 
+            maxWidth={768} 
+            marginX="auto" 
+            gridGap={4} 
+            onSubmit={handleSubmit}>
+
+            <Input 
+              placeholder="Enter a username" 
+              onChange={(event) => setUsername(event.target.value)} 
+              isInvalid={!valid}
+              />
+            <Button type="submit">Search</Button>
+          </Flex>
+        </Box>
+        <Flex 
+          as= "main" 
+          align="center" 
+          justify="center" 
+          direction="column"
+          flex={1} 
+          background="MediumSeaGreen">
+
+          {user && (
+            <Profile name={user.name} image={user.avatar_url} bio={user.bio} />
+          )}
+
+          {repos && (
+            <SimpleGrid columns={3} spacing={6} marginTop={6} >
+              {repos.map(repo => {
+                return <Repo key={repo.id} {...repo} />
+              })}
+              </SimpleGrid>
+          )}
+        </Flex>
+      </Flex>
     </ChakraProvider>
   );
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    if(!username) {
+      setValid(false);
+      alert('Please enter a username');
+    }
+    getUser(username);
+  }
 }
 
 export default App;
